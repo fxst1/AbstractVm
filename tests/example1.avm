@@ -1,0 +1,26 @@
+;	A, B, C, D	registers
+;	S			top of stack
+;	$n			nth arguments
+
+push	int8( $1 )			; S <- argv[1]
+mov		A S					; A <- S (S is top of stack)
+cmp		A S					; FN <- (A == S)
+je		echo_ok				; FN == 0 ? goto echo_ok
+jmp		echo_bad			;
+
+echo_ok:
+
+	push	int8(0x4F)
+	print
+	push	int8(0x4B)
+	print
+	jmp		end
+
+echo_bad:
+
+	push	int8(0b01001101)
+	print
+	push	int8(0o117)
+	print
+
+end:

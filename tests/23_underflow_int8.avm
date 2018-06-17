@@ -1,0 +1,9 @@
+; -----------------------
+; 23_underflow_int8.avm -
+; -----------------------
+
+push int8(1)
+push int8(-128)
+dump
+sub
+exit
