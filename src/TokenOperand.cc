@@ -31,8 +31,8 @@ lexerparser::LexerToken<Instr*, AbstractVm&>
 								*TokenOperand::nud(lexerparser::Parser<Instr*, AbstractVm&> &parser, AbstractVm &data)
 {
 	this->push_back( parser.expression(data, this->_priority) );
-	if (!parser.getToken() || parser.getToken()->toString() != "TokenOperandClose")
-		throw lexerparser::ParserAbortException("Missing `)` after expression");
+	if (!parser.getToken() || parser.getToken()->toString() != ")")
+		throw lexerparser::ParserAbortException("Missing `)` after expression", this->_line);
 	parser.advance();
 	return (this);
 }
@@ -40,20 +40,16 @@ lexerparser::LexerToken<Instr*, AbstractVm&>
 Instr							*TokenOperand::execute(AbstractVm &data)
 {
 	if (!this->get(0))
-		throw lexerparser::ParserWarningException("Missing value between `(` and `)`");
+		throw lexerparser::ParserAbortException("Missing value between `(` and `)`", this->_line);
 
 	try
 	{
 		if (this->_type == Int32 && !dynamic_cast<TokenNumber*>( this->get(0) ))
-			throw lexerparser::ParserWarningException("Not a N value");
+			throw lexerparser::ParserWarningException("Operand is type of Int32, but not a N value", this->_line);
 		else if (this->_type == Int16 && !dynamic_cast<TokenNumber*>( this->get(0) ))
-			throw lexerparser::ParserWarningException("Not a N value");
+			throw lexerparser::ParserWarningException("Operand is type of Int16, but not a N value", this->_line);
 		else if (this->_type == Int8 && !dynamic_cast<TokenNumber*>( this->get(0) ))
-			throw lexerparser::ParserWarningException("Not a N value");
-		else if (this->_type == Float && !dynamic_cast<TokenDouble*>( this->get(0) ))
-			throw lexerparser::ParserWarningException("Not a Z value");
-		else if (this->_type == Double && !dynamic_cast<TokenDouble*>( this->get(0) ))
-			throw lexerparser::ParserWarningException("Not a Z value");
+			throw lexerparser::ParserWarningException("Operand is type of Int8, but not a N value", this->_line);
 	}
 	catch (lexerparser::ParserWarningException &e)
 	{
@@ -118,7 +114,7 @@ TokenOperand::TokenOperandClose::~TokenOperandClose(void)
 
 std::string					TokenOperand::TokenOperandClose::toString(void) const
 {
-	return ("TokenOperandClose");
+	return (")");
 };
 
 lexerparser::LexerToken<Instr*, AbstractVm&>

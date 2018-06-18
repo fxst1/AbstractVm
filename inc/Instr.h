@@ -9,16 +9,28 @@ class			Instr
 	public:
 
 		typedef void (*Method)(const Instr *, AbstractVm &);
+		std::string			_method_name;
 
 	private:
 
-		std::string			_method_name;
 		eOperandType		_type;
 		std::string			_value;
+		char				_format;
 		int					_line;
 
 		std::map<std::string, Instr::Method>	createMap(void);
 		Method									getMethod(const std::string &name);
+
+		template<typename T>
+		void 									formate(void)
+		{
+			if (this->_format == 'x' || this->_format == 'o' || this->_format == 'b')
+			{
+				T			value = static_cast<T>( atoi(this->_value.c_str()) );
+
+				this->_value = std::to_string( -(~(value) + 1) );
+			}
+		}
 
 		static void			push(const Instr *i, AbstractVm& avm);
 		static void			pop(const Instr *i, AbstractVm& avm);
@@ -44,6 +56,8 @@ class			Instr
 		void				setLine(const int line);
 		void				setType(const eOperandType type);
 		void				setValue(const std::string &value);
+		void				setFormat(const char c);
+
 		void				compute(AbstractVm &avm);
 };
 

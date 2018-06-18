@@ -1,17 +1,21 @@
 #include "AbstractVm.h"
 
 AbstractVm::AbstractVm(void):
+	_buffer(),
 	_lines(),
 	_stack(),
 	_parser(),
-	_stop()
+	_stop(),
+	_print_newline(false)
 {}
 
 AbstractVm::AbstractVm(const AbstractVm &src):
+	_buffer(),
 	_lines(),
 	_stack(),
 	_parser(),
-	_stop()
+	_stop(),
+	_print_newline(false)
 { *this = src; }
 
 AbstractVm::~AbstractVm(void)
@@ -120,6 +124,22 @@ bool				AbstractVm::syntaxParser(void)
 	return (true);
 }
 
+bool				AbstractVm::syntaxLookExit(void)
+{
+	Instr			*i = nullptr;
+
+	for (auto it = this->_lines.begin(); it != this->_lines.end(); it++)
+	{
+		i = *it;
+		if (i->_method_name == "exit")
+			return (true);
+	}
+
+	std::cerr << "Missing exit instruction" << std::endl;
+	return (false);
+}
+
+
 void				AbstractVm::execute(void)
 {
 	this->_cursor = this->_lines.begin();
@@ -131,25 +151,45 @@ void				AbstractVm::execute(void)
 		}
 		catch (const lexerparser::ParserWarningException &e)
 		{
+			if (this->_print_newline)
+				std::cout << std::endl;
+			this->_print_newline = false;
+
 			std::cerr << e.what() << std::endl;
 		}
 		catch (const lexerparser::ParserAbortException &e)
 		{
+			if (this->_print_newline)
+				std::cout << std::endl;
+			this->_print_newline = false;
+
 			std::cerr << e.what() << std::endl;
 			break ;
 		}
 		catch (const Overflow &e)
 		{
+			if (this->_print_newline)
+				std::cout << std::endl;
+			this->_print_newline = false;
+
 			std::cerr << e.what() << std::endl;
 			break ;
 		}
 		catch (const Underflow &e)
 		{
+			if (this->_print_newline)
+				std::cout << std::endl;
+			this->_print_newline = false;
+
 			std::cerr << e.what() << std::endl;
 			break ;
 		}
 		catch (const DivideModulusError &e)
 		{
+			if (this->_print_newline)
+				std::cout << std::endl;
+			this->_print_newline = false;
+
 			std::cerr << e.what() << std::endl;
 			break ;
 		}

@@ -40,6 +40,7 @@ class			AbstractVm
 		std::stack<const IOperand*>				_stack;
 		Parser									_parser;
 		bool									_stop;
+		bool									_print_newline;
 
 		AbstractVm(void);
 		AbstractVm(const AbstractVm &src);
@@ -50,6 +51,7 @@ class			AbstractVm
 		bool				readFile(std::istream &file);
 		bool				readFile(const std::string &filename);
 		bool				syntaxParser(void);
+		bool				syntaxLookExit(void);
 		void				execute(void);
 
 };

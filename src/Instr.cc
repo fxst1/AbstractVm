@@ -5,19 +5,37 @@ Instr::Instr(void):
 	_method_name(),
 	_type(Undef),
 	_value(),
+	_format(0),
 	_line()
 {}
 
 Instr::Instr(const Instr &src):
-	_method_name(src._method_name),
-	_type(src._type),
-	_value(src._value),
-	_line(src._line)
-{}
+	_method_name(),
+	_type(Undef),
+	_value(),
+	_format(0),
+	_line()
+{ *this = src; }
 
 Instr::~Instr(void)
 {}
 
+Instr									&Instr::operator=(const Instr &rhs)
+{
+	if (this != &rhs)
+	{
+		this->_method_name = rhs._method_name;
+		this->_type = rhs._type;
+		this->_value = rhs._value;
+		this->_format = rhs._format;
+		this->_line = rhs._line;
+	}
+	return (*this);
+}
+
+/*
+**	Function Map
+*/
 
 std::map<std::string, Instr::Method>	Instr::createMap(void)
 {
@@ -38,48 +56,99 @@ std::map<std::string, Instr::Method>	Instr::createMap(void)
 	return (map);
 }
 
-Instr::Method	Instr::getMethod(const std::string &name)
+Instr::Method							Instr::getMethod(const std::string &name)
 {
 	static std::map<std::string, Instr::Method>	map = Instr::createMap();
 
-//	if (name.length() && map.find(name) != map.end())
 	return (map[name]);
-//	throw lexerparser::ParserAbortException("Not an instruction", this->_line);
 }
+/*
+void									Instr::format(void)
+{
+	std::stringstream					ss;
 
-void			Instr::setMethod(const std::string &methodname)
+	if (this->_format == 'x' || this->_format == 'o' || this->_format == 'b')
+	{
+		if (this->_type == Int8)
+		{
+			int8_t			value = 0;
+
+			ss << this->_value;
+			ss >> value;
+			this->_value = std::to_string(value);
+		}
+		else if (this->_type == Int16)
+		{
+			int16_t			value = 0;
+
+			ss << this->_value;
+			ss >> value;
+			this->_value = std::to_string(value);
+		}
+		else if (this->_type == Int16)
+		{
+			int8_t			value = 0;
+
+			ss << this->_value;
+			ss >> value;
+			this->_value = std::to_string(value);
+		}
+	}
+}
+*/
+/*
+**	Setters
+*/
+
+void									Instr::setMethod(const std::string &methodname)
 {
 	this->_method_name = methodname;
 }
 
-void			Instr::setType(const eOperandType type)
+void									Instr::setType(const eOperandType type)
 {
 	this->_type = type;
 }
 
-void			Instr::setValue(const std::string &value)
+void									Instr::setValue(const std::string &value)
 {
 	this->_value = value;
 }
 
-void			Instr::setLine(const int line)
+void									Instr::setFormat(const char c)
+{
+	this->_format = c;
+}
+
+void									Instr::setLine(const int line)
 {
 	this->_line = line;
 }
 
-void			Instr::compute(AbstractVm &avm)
+/*
+**	Instructions
+*/
+
+void									Instr::compute(AbstractVm &avm)
 {
+	if (this->_type == Int32)
+		this->formate<int32_t>();
+	else if (this->_type == Int16)
+		this->formate<int16_t>();
+	else if (this->_type == Int8)
+		this->formate<int8_t>();
+
 	(*Instr::getMethod(this->_method_name))(this, avm);
 }
 
-void			Instr::push(const Instr *i, AbstractVm &avm)
+void									Instr::push(const Instr *i, AbstractVm &avm)
 {
 	if (i->_type == Undef || i->_value == "")
 		throw lexerparser::ParserWarningException("Cannot push undefined value", i->_line);
 	avm._stack.push( OperandFactory::createOperand(i->_type, i->_value) );
 }
 
-void			Instr::pop(const Instr *i, AbstractVm &avm)
+void									Instr::pop(const Instr *i, AbstractVm &avm)
 {
 	if (!avm._stack.empty())
 	{
@@ -91,13 +160,13 @@ void			Instr::pop(const Instr *i, AbstractVm &avm)
 	(void)i;
 }
 
-void			Instr::exit(const Instr *i, AbstractVm &avm)
+void									Instr::exit(const Instr *i, AbstractVm &avm)
 {
 	avm._stop = true;
 	(void)i;
 }
 
-void			Instr::assert(const Instr *i, AbstractVm &avm)
+void									Instr::assert(const Instr *i, AbstractVm &avm)
 {
 	const IOperand	*tmp;
 
@@ -111,7 +180,7 @@ void			Instr::assert(const Instr *i, AbstractVm &avm)
 	(void)i;
 }
 
-void			Instr::print(const Instr *i, AbstractVm &avm)
+void									Instr::print(const Instr *i, AbstractVm &avm)
 {
 	const IOperand	*o;
 	int				v;
@@ -121,8 +190,9 @@ void			Instr::print(const Instr *i, AbstractVm &avm)
 		o = avm._stack.top();
 		if (o->getType() == Int8)
 		{
+			avm._print_newline = true;
 			v = atoi(o->toString().c_str());
-			std::cout << static_cast<char>(v) << std::endl;
+			std::cout << static_cast<char>(v);
 		}
 		else
 			throw lexerparser::ParserAbortException("Not an Int8", i->_line);
@@ -133,7 +203,7 @@ void			Instr::print(const Instr *i, AbstractVm &avm)
 	(void)i;
 }
 
-static std::string		removeZeros(std::string s)
+static std::string						removeZeros(std::string s)
 {
 	int					i;
 
@@ -151,10 +221,15 @@ static std::string		removeZeros(std::string s)
 	return (s);
 }
 
-void			Instr::dump(const Instr *i, AbstractVm &avm)
+void									Instr::dump(const Instr *i, AbstractVm &avm)
 {
 	std::stack<const IOperand*>	tmp = avm._stack;
 
+	if (!tmp.empty() && avm._print_newline)
+	{
+		std::cout << std::endl;
+		avm._print_newline = false;
+	}
 	while (!tmp.empty())
 	{
 		std::cout << removeZeros(( tmp.top() )->toString()) << std::endl;
@@ -163,7 +238,7 @@ void			Instr::dump(const Instr *i, AbstractVm &avm)
 	(void)i;
 }
 
-void			Instr::add(const Instr *i, AbstractVm &avm)
+void									Instr::add(const Instr *i, AbstractVm &avm)
 {
 	const IOperand	*right;
 	const IOperand	*left;
@@ -185,7 +260,7 @@ void			Instr::add(const Instr *i, AbstractVm &avm)
 		throw lexerparser::ParserAbortException("Not enough operand on stack", i->_line);
 }
 
-void			Instr::sub(const Instr *i, AbstractVm &avm)
+void									Instr::sub(const Instr *i, AbstractVm &avm)
 {
 	const IOperand	*right;
 	const IOperand	*left;
@@ -207,7 +282,7 @@ void			Instr::sub(const Instr *i, AbstractVm &avm)
 		throw lexerparser::ParserAbortException("Not enough operand on stack", i->_line);
 }
 
-void			Instr::mul(const Instr *i, AbstractVm &avm)
+void									Instr::mul(const Instr *i, AbstractVm &avm)
 {
 	const IOperand	*right;
 	const IOperand	*left;
@@ -229,7 +304,7 @@ void			Instr::mul(const Instr *i, AbstractVm &avm)
 		throw lexerparser::ParserAbortException("Not enough operand on stack", i->_line);
 }
 
-void			Instr::div(const Instr *i, AbstractVm &avm)
+void									Instr::div(const Instr *i, AbstractVm &avm)
 {
 	const IOperand	*right;
 	const IOperand	*left;
@@ -251,7 +326,7 @@ void			Instr::div(const Instr *i, AbstractVm &avm)
 		throw lexerparser::ParserAbortException("Not enough operand on stack", i->_line);
 }
 
-void			Instr::mod(const Instr *i, AbstractVm &avm)
+void										Instr::mod(const Instr *i, AbstractVm &avm)
 {
 	const IOperand	*right;
 	const IOperand	*left;

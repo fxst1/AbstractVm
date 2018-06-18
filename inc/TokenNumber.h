@@ -11,6 +11,7 @@ class				TokenNumber: public lexerparser::LexerToken<Instr*, AbstractVm&>
 	private:
 
 		std::string			_value;
+		char				_format;
 
 	public:
 
@@ -28,6 +29,11 @@ class				TokenNumber: public lexerparser::LexerToken<Instr*, AbstractVm&>
 		Instr				*execute(AbstractVm &data);
 		lexerparser::LexerToken<Instr*, AbstractVm&>
 							*clone(const char *s);
+
+		static std::string	hex2dec(const std::string &s);
+		static std::string	oct2dec(const std::string &s);
+		static std::string	bin2dec(const std::string &s);
+
 };
 
 #endif

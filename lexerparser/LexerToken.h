@@ -206,7 +206,6 @@ namespace	lexerparser
 				return (tok);
 			}
 
-
 	};
 
 };

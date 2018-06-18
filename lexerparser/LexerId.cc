@@ -55,7 +55,7 @@ size_t					lexerparser::LexerId::regexCompare(LexerId *lid, const std::string& s
 	std::smatch	pieces;
 
 	lid->_length = 0;
-	if (std::regex_search(s, pieces, std::regex(lid->_str)))
+	if (std::regex_search(s, pieces, std::regex(lid->_str, std::regex::extended)))
 	{
 		if (pieces.size() > 0)
 		{
